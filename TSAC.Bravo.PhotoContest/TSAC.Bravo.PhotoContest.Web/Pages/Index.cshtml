@@ -2,9 +2,87 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
+    int count = 0;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<br /><br />
+
+@if (User.Identity.IsAuthenticated)
+{
+    <form method="post" enctype="multipart/form-data" asp-page="Index" class="form-horizontal">
+        <div class="input-group mb-3">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" asp-for="photoUpload">
+                <label class="custom-file-label" aria-describedby="Choose a Photo">Choose a Photo</label>
+            </div>
+            <div class="input-group-append">
+                <input type="submit" value="Upload" class="input-group-text" />
+            </div>
+        </div>
+    </form>
+}
+else
+{
+    <p class="text-center">
+        Please <a asp-area="Identity" asp-page="/Account/Register">Register</a> or <a asp-area="Identity" asp-page="/Account/Login">Login</a> to Upload
+    </p>
+}
+
+<br />
+
+<div class="row">
+    @foreach (var item in Model.Photos)
+    {
+        count++;
+        <div class="col-md-4 pb-md-2">
+            <div class="card h-100">
+                <img src="@item.Url" class="card-img-top" height="300" width="400" />
+                <div class="card-body">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        @if (Model.Voted(item.Id))
+                        {
+                            <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
+                        }
+                        else
+                        {
+                            <form method="post" class="form-inline" asp-page-handler="Vote">
+                                <input type="hidden" value="@item.Id" name="id" />
+                                <div class="form-group pr-md-2">
+                                    <label class="col-form-label pr-md-2">Vote</label>
+                                    <select name="voteChoice" class="form-control form-check-input">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <input type="submit" value="Invia" class="btn btn-primary" />
+                                </div>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        <p class="card-text">
+                            Please <a asp-area="Identity" asp-page="/Account/Register">Register</a> or <a asp-area="Identity" asp-page="/Account/Login">Login</a> to Vote
+                        </p>
+                    }
+
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Uploaded by @item.UserName</small>
+                </div>
+            </div>
+        </div>
+        <br />
+        @if (count % 3 == 0)
+        {
+        @:</div>
+        @:<br />
+        @:<div class="row">
+        }
+    }
 </div>
