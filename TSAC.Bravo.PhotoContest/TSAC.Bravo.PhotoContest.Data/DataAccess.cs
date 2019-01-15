@@ -11,16 +11,29 @@ namespace TSAC.Bravo.PhotoContest.Data
     {
         private readonly string _connectionString;
 
+        /// <summary>
+        /// Costructor
+        /// </summary>
+        /// <param name="connectionString"></param>
         public DataAccess(string connectionString)
         {
             _connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Costructor
+        /// </summary>
+        /// <param name="config"></param>
         public DataAccess(IConfiguration config)
         {
             _connectionString = config.GetConnectionString("Photocontest");
         }
 
+        /// <summary>
+        /// Get all the informations about a photo
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         public Photo GetPhoto(int Id)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -38,6 +51,10 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
+        /// <summary>
+        /// Get a list of photos
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Photo> GetPhotos()
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -54,6 +71,10 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
+        /// <summary>
+        /// Update the database with the number of votes, an algebric sum of all the votes and an average vote based on the result of a division
+        /// </summary>
+        /// <param name="photo"></param>
         public void AddVotePhoto(Photo photo)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -67,6 +88,10 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
+        /// <summary>
+        /// Insert in the database a row the user id of the user that voted a photo, the photo id of the image and score given
+        /// </summary>
+        /// <param name="vote"></param>
         public void AddVote(Vote vote)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -77,6 +102,10 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
+        /// <summary>
+        /// Insert in the database a row with the information about a new photo
+        /// </summary>
+        /// <param name="photo"></param>
         public void AddPhoto(Photo photo)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -87,6 +116,12 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
+        /// <summary>
+        /// return the informations about a vote if the user voted that photo
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
         public Vote GetPhotoUser(int id, string userId)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -104,6 +139,10 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
+        /// <summary>
+        /// return a list of photos ordered by average and votes
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Photo> GetRanking()
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -116,7 +155,7 @@ namespace TSAC.Bravo.PhotoContest.Data
                                     ,aspU.""UserName"" as UserName 
                             FROM ""AspNetUsers"" aspU 
                                     join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user
-                            ORDER BY Average desc";
+                            ORDER BY Average desc, Votes desc";
                 return connection.Query<Photo>(query);
             }
         }
