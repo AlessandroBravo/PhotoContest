@@ -1,0 +1,39 @@
+﻿@page
+@model TSAC.Bravo.PhotoContest.Web.Pages.RankingModel
+@{
+    ViewData["Title"] = "Ranking";
+    int count = 0;
+    int pos = 0;
+}
+
+<div class="text-center">
+    <h1 class="display-4">Ranking</h1>
+</div>
+<br />
+
+<div class="row">
+    @foreach (var item in Model.Photos)
+    {
+        count++;
+        pos++;
+        <div class="col-md-4 pb-md-2">
+            <div class="card h-100">
+                <div class="card-header">Position: @pos</div>
+                <img src="@item.Url" class="card-img-top" height="300" width="400" />
+                <div class="card-body">
+                    <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Uploaded by @item.UserName</small>
+                </div>
+            </div>
+        </div>
+        <br />
+        @if (count % 3 == 0)
+        {
+        @:</div>
+        @:<br />
+        @:<div class="row">
+        }
+    }
+</div>
