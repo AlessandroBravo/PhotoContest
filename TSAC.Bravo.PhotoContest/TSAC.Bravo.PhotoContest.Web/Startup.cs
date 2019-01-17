@@ -49,7 +49,15 @@ namespace TSAC.Bravo.PhotoContest.Web
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddScoped<IDataAccess, DataAccess>();
-            services.AddScoped<IUploadHelper,UploadHelper>();
+            if (Configuration["ActiveService"].Equals("aws"))
+            {
+                services.AddScoped<IUploadLibrary, UploadAWS>();
+            }
+            else
+            {
+                services.AddScoped<IUploadLibrary, UploadAzure>();
+            }
+            
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders =

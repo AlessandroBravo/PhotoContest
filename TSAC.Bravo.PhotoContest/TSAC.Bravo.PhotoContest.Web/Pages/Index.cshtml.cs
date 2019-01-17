@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Transfer;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using RabbitMQ.Client;
 using TSAC.Bravo.PhotoContest.Data;
 using TSAC.Bravo.PhotoContest.Data.Models;
 using TSAC.Bravo.PhotoContest.Upload;
@@ -21,7 +23,8 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         private readonly IDataAccess _data;
         public UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _config;
-        private readonly IUploadHelper _uploadHelper;
+        private readonly IUploadLibrary _uploadAws;
+        private readonly IUploadLibrary _uploadAzure;
         public IEnumerable<Photo> Photos { get; set; }
 
         [BindProperty]
@@ -34,12 +37,13 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// <param name="userManager"></param>
         /// <param name="amazonS3"></param>
         /// <param name="config"></param>
-        public IndexModel(IDataAccess data, UserManager<IdentityUser> userManager,IConfiguration config, IUploadHelper uploadHelper)
+        public IndexModel(IDataAccess data, UserManager<IdentityUser> userManager, IConfiguration config, IUploadLibrary uploadAws, IUploadLibrary uploadAzure)
         {
             _data = data;
             _userManager = userManager;
             _config = config;
-            _uploadHelper = uploadHelper;
+            _uploadAws = uploadAws;
+            _uploadAzure = uploadAzure;
         }
 
         /// <summary>
@@ -59,10 +63,11 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         {
             if (IsImage(photoUpload))
             {
-                string cdn = _config["CDN"];
-                string url = cdn + photoUpload.FileName;
+                string url = _uploadAws.GetCdn() + photoUpload.FileName;
 
-                await _uploadHelper.UploadToS3(photoUpload.OpenReadStream(), photoUpload.FileName);
+                await _uploadAws.Upload(photoUpload.OpenReadStream(), photoUpload.FileName);
+
+                //await _uploadAzure.Upload(photoUpload.OpenReadStream(), photoUpload.FileName);
 
                 _data.AddPhoto(new Photo
                 {
@@ -72,8 +77,36 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                     Total = 0,
                     UserName = _userManager.GetUserId(User)
                 });
+
+                //SendToQueue("hello world");
+
             }
             return RedirectToPage("./Index");
+        }
+
+        public void SendToQueue(string message)
+        {
+            var factory = new ConnectionFactory() { HostName = _config["RabbitMQ:HostName"], UserName = _config["RabbitMQ:UserName"], Password = _config["RabbitMQ:Password"] };
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                channel.QueueDeclare(queue: "task_queue",
+                                     durable: true,
+                                     exclusive: false,
+                                     autoDelete: false,
+                                     arguments: null);
+
+
+                var body = Encoding.UTF8.GetBytes(message);
+
+                var properties = channel.CreateBasicProperties();
+                properties.Persistent = true;
+
+                channel.BasicPublish(exchange: "",
+                                     routingKey: "task_queue",
+                                     basicProperties: properties,
+                                     body: body);
+            }
         }
 
         /// <summary>
