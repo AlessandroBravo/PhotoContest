@@ -13,6 +13,10 @@ using Microsoft.EntityFrameworkCore;
 using TSAC.Bravo.PhotoContest.Web.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Amazon.S3;
+using TSAC.Bravo.PhotoContest.Data;
+using Microsoft.AspNetCore.HttpOverrides;
+using TSAC.Bravo.PhotoContest.Upload;
 
 namespace TSAC.Bravo.PhotoContest.Web
 {
@@ -35,20 +39,31 @@ namespace TSAC.Bravo.PhotoContest.Web
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ApplicationDbContext>(
+                option => option.UseNpgsql(Configuration.GetConnectionString("PhotoContest"))
+                );
             services.AddDefaultIdentity<IdentityUser>()
                 .AddDefaultUI(UIFramework.Bootstrap4)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddScoped<IDataAccess, DataAccess>();
+            services.AddScoped<IUploadHelper,UploadHelper>();
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

@@ -12,16 +12,20 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using TSAC.Bravo.PhotoContest.Data;
 using TSAC.Bravo.PhotoContest.Data.Models;
+using TSAC.Bravo.PhotoContest.Upload;
 
 namespace TSAC.Bravo.PhotoContest.Web.Pages
 {
     public class IndexModel : PageModel
     {
         private readonly IDataAccess _data;
-        private readonly IAmazonS3 _client;
         public UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _config;
+        private readonly IUploadHelper _uploadHelper;
         public IEnumerable<Photo> Photos { get; set; }
+
+        [BindProperty]
+        public IFormFile photoUpload { get; set; }
 
         /// <summary>
         /// Costructor
@@ -30,12 +34,12 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// <param name="userManager"></param>
         /// <param name="amazonS3"></param>
         /// <param name="config"></param>
-        public IndexModel(IDataAccess data, UserManager<IdentityUser> userManager, IAmazonS3 amazonS3, IConfiguration config)
+        public IndexModel(IDataAccess data, UserManager<IdentityUser> userManager,IConfiguration config, IUploadHelper uploadHelper)
         {
             _data = data;
             _userManager = userManager;
-            _client = amazonS3;
             _config = config;
+            _uploadHelper = uploadHelper;
         }
 
         /// <summary>
@@ -46,8 +50,6 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             Photos = _data.GetPhotos();
         }
 
-        [BindProperty]
-        public IFormFile photoUpload { get; set; }
 
         /// <summary>
         /// Upload the selected image to Amazon S3
@@ -58,23 +60,10 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             if (IsImage(photoUpload))
             {
                 string cdn = _config["CDN"];
-                string bucketName = _config["bucketName"];
-                using (var newMemoryStream = new MemoryStream())
-                {
-                    photoUpload.CopyTo(newMemoryStream);
-
-                    var uploadRequest = new TransferUtilityUploadRequest
-                    {
-                        InputStream = newMemoryStream,
-                        Key = photoUpload.FileName,
-                        BucketName = bucketName,
-                        CannedACL = S3CannedACL.PublicRead
-                    };
-                    var fileTransferUtility = new TransferUtility(_client);
-                    await fileTransferUtility.UploadAsync(uploadRequest);
-                }
-                
                 string url = cdn + photoUpload.FileName;
+
+                await _uploadHelper.UploadToS3(photoUpload.OpenReadStream(), photoUpload.FileName);
+
                 _data.AddPhoto(new Photo
                 {
                     Url = url,
