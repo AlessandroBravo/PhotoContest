@@ -7,20 +7,24 @@ using System.Threading.Tasks;
 
 namespace TSAC.Bravo.PhotoContest.Upload
 {
-    public class UploadHelper : IUploadHelper
+    public class UploadAWS : IUploadLibrary
     {
         private readonly IAmazonS3 _client;
         private readonly IConfiguration _config;
 
-        public UploadHelper(IConfiguration config)
+        public UploadAWS(IConfiguration config)
         {
             _client = new AmazonS3Client(config["Amazon:aws_access_key_id"], config["Amazon:aws_secret_access_key"], Amazon.RegionEndpoint.EUWest1);
             _config = config;
         }
 
-        public async Task UploadToS3(Stream stream, string fileName)
+        public string GetCdn()
         {
-            string cdn = _config["CDN"];
+            return _config["CDN"];
+        }
+
+        public async Task Upload(Stream stream, string fileName)
+        {
             string bucketName = _config["bucketName"];
 
             var uploadRequest = new TransferUtilityUploadRequest
