@@ -78,7 +78,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                     UserName = _userManager.GetUserId(User)
                 });
 
-                //SendToQueue("hello world");
+                //SendToQueue(url);
 
             }
             return RedirectToPage("./Index");
