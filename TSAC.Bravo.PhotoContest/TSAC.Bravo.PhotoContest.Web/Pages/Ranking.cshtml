@@ -19,7 +19,7 @@
         <div class="col-md-4 pb-md-2">
             <div class="card h-100">
                 <div class="card-header">Position: @pos</div>
-                <img src="@item.Url" class="card-img-top" height="300" width="400" />
+                <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.ThumbnailUrl" class="card-img-top" height="300" width="400" /></a>
                 <div class="card-body">
                     <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
                 </div>

@@ -7,36 +7,13 @@
 
 <br /><br />
 
-@if (User.Identity.IsAuthenticated)
-{
-    <form method="post" enctype="multipart/form-data" asp-page="Index" class="form-horizontal">
-        <div class="input-group mb-3">
-            <div class="custom-file">
-                <input type="file" class="custom-file-input" asp-for="photoUpload">
-                <label class="custom-file-label" aria-describedby="Choose a Photo">Choose a Photo</label>
-            </div>
-            <div class="input-group-append">
-                <input type="submit" value="Upload" class="input-group-text" />
-            </div>
-        </div>
-    </form>
-}
-else
-{
-    <p class="text-center">
-        Please <a asp-area="Identity" asp-page="/Account/Register">Register</a> or <a asp-area="Identity" asp-page="/Account/Login">Login</a> to Upload
-    </p>
-}
-
-<br />
-
 <div class="row">
     @foreach (var item in Model.Photos)
     {
         count++;
         <div class="col-md-4 pb-md-2">
             <div class="card h-100">
-                <img src="@item.Url" class="card-img-top" height="300" width="400" />
+                <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.ThumbnailUrl" class="card-img-top" height="300" width="400" /></a>
                 <div class="card-body">
                     @if (User.Identity.IsAuthenticated)
                     {
