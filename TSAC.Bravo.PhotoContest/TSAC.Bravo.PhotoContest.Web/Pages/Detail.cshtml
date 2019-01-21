@@ -1,0 +1,23 @@
+﻿@page "{id}"
+@model TSAC.Bravo.PhotoContest.Web.Pages.DetailModel
+@{
+    ViewData["Title"] = "Detail";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Detail</h1>
+</div>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="col-md-12">
+        <a asp-page="./Edit" asp-route-id="@Model.Photo.Id" class="btn btn-primary btn-sm active" role="button">Edit</a>
+    </div>
+    <br />
+}
+
+<h2>@Model.Photo.Title</h2>
+
+<p>@Model.Photo.Description</p>
+
+<img src="@Model.Photo.Url" class="img-fluid mx-auto d-block" />
