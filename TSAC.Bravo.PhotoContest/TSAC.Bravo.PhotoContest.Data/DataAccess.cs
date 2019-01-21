@@ -38,14 +38,17 @@ namespace TSAC.Bravo.PhotoContest.Data
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
-                var query = @"SELECT t18bp.id as Id
-                                    ,t18bp.url as Url
-                                    ,t18bp.votes as Votes
-                                    ,t18bp.total as Total
-                                    ,t18bp.average as Average
-                                    ,aspU.""UserName"" as UserName 
-                            FROM ""AspNetUsers"" aspU 
-                                    join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user
+                var query = @"SELECT t18bp.id          as Id
+                                     ,t18bp.url          as Url
+                                     ,t18bp.votes        as Votes
+                                     ,t18bp.total        as Total
+                                     ,t18bp.average      as Average
+                                     ,aspU.""UserName""    as UserName
+                                     ,t18bp.thumbnailurl as ThumbnailUrl
+                                     ,t18bp.title as Title
+                                     ,t18bp.description as Description
+                                FROM ""AspNetUsers"" aspU
+                                       join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
                             WHERE t18bp.id = @id";
                 return connection.QueryFirstOrDefault<Photo>(query, new { id = Id });
             }
@@ -65,40 +68,10 @@ namespace TSAC.Bravo.PhotoContest.Data
                                       ,t18bp.total as Total
                                       ,t18bp.average as Average
                                       ,aspU.""UserName"" as UserName
+                                      ,t18bp.thumbnailurl as ThumbnailUrl
                                 FROM ""AspNetUsers"" aspU
-                                join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user";
+                                join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id where t18bp.thumbnailurl is not null";
                 return connection.Query<Photo>(query);
-            }
-        }
-
-        /// <summary>
-        /// Update the database with the number of votes, an algebric sum of all the votes and an average vote based on the result of a division
-        /// </summary>
-        /// <param name="photo"></param>
-        public void AddVotePhoto(Photo photo)
-        {
-            using (var connection = new NpgsqlConnection(_connectionString))
-            {
-                var query = @"UPDATE tsac18_bravo_photo
-                            SET Votes = @Votes
-                            ,Total = @Total
-                            ,Average = @Average
-                             WHERE Id = @Id";
-                connection.Execute(query, photo);
-            }
-        }
-
-        /// <summary>
-        /// Insert in the database a row the user id of the user that voted a photo, the photo id of the image and score given
-        /// </summary>
-        /// <param name="vote"></param>
-        public void AddVote(Vote vote)
-        {
-            using (var connection = new NpgsqlConnection(_connectionString))
-            {
-                var query = @"insert into tsac18_bravo_vote_user(user_id, photo_id, rating) 
-                                                        values (@UserId, @PhotoId, @Rating)";
-                connection.Execute(query, vote);
             }
         }
 
@@ -110,8 +83,8 @@ namespace TSAC.Bravo.PhotoContest.Data
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
-                var query = @"INSERT INTO tsac18_bravo_photo(url, votes, total, average, upload_user) 
-                                                    VALUES (@Url, @Votes, @Total, @Average, @UserName);";
+                var query = @"INSERT INTO tsac18_bravo_photo(url, votes, total, average, upload_user_id, title, description) 
+                                                    VALUES (@Url, @Votes, @Total, @Average, @UserName, @Title, @Description);";
                 connection.Execute(query, photo);
             }
         }
@@ -126,8 +99,7 @@ namespace TSAC.Bravo.PhotoContest.Data
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
-                var query = @"select 
-                                    t18bvu.id as Id
+                var query = @"select t18bvu.id as Id
                                     ,user_id as UserId
                                     ,photo_id as PhotoId
                                     ,rating as Rating
@@ -153,10 +125,58 @@ namespace TSAC.Bravo.PhotoContest.Data
                                     ,t18bp.total as Total
                                     ,t18bp.average as Average
                                     ,aspU.""UserName"" as UserName 
+                                    ,t18bp.thumbnailurl as ThumbnailUrl
                             FROM ""AspNetUsers"" aspU 
-                                    join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user
+                                    join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
+                            where t18bp.thumbnailurl is not null
                             ORDER BY Average desc, Votes desc";
                 return connection.Query<Photo>(query);
+            }
+        }
+
+        /// <summary>
+        /// update the database with the new vote
+        /// </summary>
+        /// <param name="vote"></param>
+        /// <param name="photo"></param>
+        public void AddVote(Vote vote, Photo photo)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var query = @"insert into tsac18_bravo_vote_user(user_id, photo_id, rating) 
+                                                        values (@UserId, @PhotoId, @Rating)";
+
+                    connection.Execute(query, vote, transaction);
+
+                    var query1 = @"UPDATE tsac18_bravo_photo
+                            SET Votes = @Votes
+                            ,Total = @Total
+                            ,Average = @Average
+                             WHERE Id = @Id";
+
+                    connection.Execute(query1, photo, transaction);
+
+                    transaction.Commit();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="photo"></param>
+        public void UpdatePhoto(Photo photo)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                var query = @"UPDATE tsac18_bravo_photo
+                            SET title = @Title
+                              ,description = @Description
+                             WHERE Id = @Id";
+                connection.Execute(query, photo);
             }
         }
     }
