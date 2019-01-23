@@ -47,6 +47,7 @@ namespace TSAC.Bravo.PhotoContest.Data
                                      ,t18bp.thumbnailurl as ThumbnailUrl
                                      ,t18bp.title as Title
                                      ,t18bp.description as Description
+                                     ,aspU.""Id"" as UserId
                                 FROM ""AspNetUsers"" aspU
                                        join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
                             WHERE t18bp.id = @id";

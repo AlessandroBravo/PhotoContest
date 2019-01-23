@@ -27,6 +27,9 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             Photo = _data.GetPhoto(id);
         }
 
-
+        public bool IsOwner()
+        {
+            return Photo.UserId == _userManager.GetUserId(User);
+        }
     }
 }
