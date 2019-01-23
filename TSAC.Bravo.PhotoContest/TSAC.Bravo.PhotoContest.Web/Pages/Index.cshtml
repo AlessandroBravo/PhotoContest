@@ -5,15 +5,25 @@
     int count = 0;
 }
 
-<br /><br />
-
-<div class="row">
+<div class="text-center">
+    <h1 class="display-4">Photo Contest</h1>
+</div>
+<br />
+<div class="card-deck">
     @foreach (var item in Model.Photos)
     {
         count++;
-        <div class="col-md-4 pb-md-2">
-            <div class="card h-100">
-                <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.ThumbnailUrl" class="card-img-top" height="300" width="400" /></a>
+        <div class="col-md-4 col-sm-12 mb-3 px-0">
+            <div class="card ">
+                @if (item.ThumbnailUrl != null)
+                {
+                    <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.ThumbnailUrl" class="card-img-top" height="300" width="400" /></a>
+                }
+                else
+                {
+                    <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.Url" class="card-img-top" height="300" width="400" /></a>
+                }
+
                 <div class="card-body">
                     @if (User.Identity.IsAuthenticated)
                     {
@@ -54,12 +64,10 @@
                 </div>
             </div>
         </div>
-        <br />
         @if (count % 3 == 0)
         {
         @:</div>
-        @:<br />
-        @:<div class="row">
+        @:<div class="card-deck">
         }
     }
 </div>
