@@ -8,16 +8,24 @@
     <h1 class="display-4">Detail</h1>
 </div>
 
-@if (User.Identity.IsAuthenticated && Model.IsOwner())
+@if (Model.Photo == null)
 {
-    <div class="col-md-12">
-        <a asp-page="./Edit" asp-route-id="@Model.Photo.Id" class="btn btn-primary btn-sm active" role="button">Edit</a>
-    </div>
-    <br />
+    <p class="blockquote text-center">Something went Wrong</p>
+    <img src="~/images/blank_canvas.svg" alt="No Photos" class="img-fluid mx-auto d-block" height="800px" width="700px" />
 }
+else
+{
+    @if (User.Identity.IsAuthenticated && Model.IsOwner())
+    {
+        <div class="col-md-12">
+            <a asp-page="./Edit" asp-route-id="@Model.Photo.Id" class="btn btn-primary btn-sm active" role="button">Edit</a>
+        </div>
+        <br />
+    }
 
-<h2>@Model.Photo.Title</h2>
+    <h2>@Model.Photo.Title</h2>
 
-<p>@Model.Photo.Description</p>
+    <p>@Model.Photo.Description</p>
 
-<img src="@Model.Photo.Url" class="img-fluid mx-auto d-block" />
+    <img src="@Model.Photo.Url" class="img-fluid mx-auto d-block" />
+}

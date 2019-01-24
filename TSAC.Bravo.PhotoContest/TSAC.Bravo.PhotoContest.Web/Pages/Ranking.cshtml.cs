@@ -32,7 +32,14 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// </summary>
         public void OnGet()
         {
-            Photos = _data.GetRanking();
+            try
+            {
+                Photos = _data.GetRanking();
+            }
+            catch (Exception)
+            {
+                Photos = null;
+            }
         }
     }
 }

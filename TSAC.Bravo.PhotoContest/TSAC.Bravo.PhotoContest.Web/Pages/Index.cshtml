@@ -9,65 +9,79 @@
     <h1 class="display-4">Photo Contest</h1>
 </div>
 <br />
-<div class="card-deck">
-    @foreach (var item in Model.Photos)
-    {
-        count++;
-        <div class="col-md-4 col-sm-12 mb-3 px-0">
-            <div class="card ">
-                @if (item.ThumbnailUrl != null)
-                {
-                    <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.ThumbnailUrl" class="card-img-top" height="300" width="400" /></a>
-                }
-                else
-                {
-                    <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.Url" class="card-img-top" height="300" width="400" /></a>
-                }
 
-                <div class="card-body">
-                    @if (User.Identity.IsAuthenticated)
+@if (Model.Photos == null)
+{
+    <p class="blockquote text-center">Not a great day for servers today. Will be back soon!!</p>
+    <img src="~/images/feeling_blue.svg" alt="Something went wrong" class="img-fluid mx-auto d-block" height="800px" width="700px" />
+}
+else if (Model.Photos.Count() == 0)
+{
+    <p class="blockquote text-center">Be the first to use our Web Site, create a new account and start uploading photos!!</p>
+    <img src="~/images/blank_canvas.svg" alt="No Photos" class="img-fluid mx-auto d-block" height="800px" width="700px" />
+}
+else
+{
+    <div class="card-deck">
+        @foreach (var item in Model.Photos)
+        {
+            count++;
+            <div class="col-md-4 col-sm-12 mb-3 px-0">
+                <div class="card ">
+                    @if (item.ThumbnailUrl != null)
                     {
-                        @if (Model.Voted(item.Id))
-                        {
-                            <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
-                        }
-                        else
-                        {
-                            <form method="post" class="form-inline" asp-page-handler="Vote">
-                                <input type="hidden" value="@item.Id" name="id" />
-                                <div class="form-group pr-md-2">
-                                    <label class="col-form-label pr-md-2">Vote</label>
-                                    <select name="voteChoice" class="form-control form-check-input">
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <input type="submit" value="Invia" class="btn btn-primary" />
-                                </div>
-                            </form>
-                        }
+                        <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.ThumbnailUrl" class="card-img-top" height="300" width="400" /></a>
                     }
                     else
                     {
-                        <p class="card-text">
-                            Please <a asp-area="Identity" asp-page="/Account/Register">Register</a> or <a asp-area="Identity" asp-page="/Account/Login">Login</a> to Vote
-                        </p>
+                        <a asp-page="/Detail" asp-route-id="@item.Id"><img src="@item.Url" class="card-img-top" height="300" width="400" /></a>
                     }
 
-                </div>
-                <div class="card-footer">
-                    <small class="text-muted">Uploaded by @item.UserName</small>
+                    <div class="card-body">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            @if (Model.Voted(item.Id))
+                            {
+                                <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
+                            }
+                            else
+                            {
+                                <form method="post" class="form-inline" asp-page-handler="Vote">
+                                    <input type="hidden" value="@item.Id" name="id" />
+                                    <div class="form-group pr-md-2">
+                                        <label class="col-form-label pr-md-2">Vote</label>
+                                        <select name="voteChoice" class="form-control form-check-input">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="submit" value="Invia" class="btn btn-primary" />
+                                    </div>
+                                </form>
+                            }
+                        }
+                        else
+                        {
+                            <p class="card-text">
+                                Please <a asp-area="Identity" asp-page="/Account/Register">Register</a> or <a asp-area="Identity" asp-page="/Account/Login">Login</a> to Vote
+                            </p>
+                        }
+
+                    </div>
+                    <div class="card-footer">
+                        <small class="text-muted">Uploaded by @item.UserName</small>
+                    </div>
                 </div>
             </div>
-        </div>
-        @if (count % 3 == 0)
-        {
-        @:</div>
-        @:<div class="card-deck">
+            @if (count % 3 == 0)
+            {
+            @:</div>
+            @:<div class="card-deck">
+            }
         }
-    }
-</div>
+    </div>
+}

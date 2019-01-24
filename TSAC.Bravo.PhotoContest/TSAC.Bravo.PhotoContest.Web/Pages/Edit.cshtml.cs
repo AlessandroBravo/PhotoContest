@@ -43,8 +43,6 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             }
             return Page();  
         }
-
-
-
+        
     }
 }

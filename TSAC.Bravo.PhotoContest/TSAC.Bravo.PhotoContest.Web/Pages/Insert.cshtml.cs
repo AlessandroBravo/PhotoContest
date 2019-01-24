@@ -63,12 +63,9 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                 {
                     if (IsImage(Photo.Image))
                     {
-
                         string url = _uploadAws.GetCdn() + Photo.Image.FileName;
 
                         await _uploadAws.Upload(Photo.Image.OpenReadStream(), Photo.Image.FileName);
-
-                        //await _uploadAzure.Upload(photoUpload.OpenReadStream(), photoUpload.FileName);
 
                         _data.AddPhoto(new Photo
                         {
@@ -81,7 +78,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                             Description = Photo.Description
                         });
 
-                        //SendToQueue(url);
+                        SendToQueue(url);
                     }
 
                 }
@@ -96,26 +93,33 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
 
         public void SendToQueue(string message)
         {
-            var factory = new ConnectionFactory() { HostName = _config["RabbitMQ:HostName"], UserName = _config["RabbitMQ:UserName"], Password = _config["RabbitMQ:Password"] };
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            try
             {
-                channel.QueueDeclare(queue: "task_queue",
-                                     durable: true,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
+                var factory = new ConnectionFactory() { HostName = _config["RabbitMQ:HostName"], UserName = _config["RabbitMQ:UserName"], Password = _config["RabbitMQ:Password"] };
+                using (var connection = factory.CreateConnection())
+                using (var channel = connection.CreateModel())
+                {
+                    channel.QueueDeclare(queue: "task_queue",
+                                         durable: true,
+                                         exclusive: false,
+                                         autoDelete: false,
+                                         arguments: null);
 
 
-                var body = Encoding.UTF8.GetBytes(message);
+                    var body = Encoding.UTF8.GetBytes(message);
 
-                var properties = channel.CreateBasicProperties();
-                properties.Persistent = true;
+                    var properties = channel.CreateBasicProperties();
+                    properties.Persistent = true;
 
-                channel.BasicPublish(exchange: "",
-                                     routingKey: "task_queue",
-                                     basicProperties: properties,
-                                     body: body);
+                    channel.BasicPublish(exchange: "",
+                                         routingKey: "task_queue",
+                                         basicProperties: properties,
+                                         body: body);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("rabbitmq error"+ e);
             }
         }
 

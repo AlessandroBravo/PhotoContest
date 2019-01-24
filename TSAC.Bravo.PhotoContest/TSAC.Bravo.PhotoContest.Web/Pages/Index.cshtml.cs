@@ -40,7 +40,14 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// </summary>
         public void OnGet()
         {
-            Photos = _data.GetPhotos();
+            try
+            {
+                Photos = _data.GetPhotos();
+            }
+            catch (Exception)
+            {
+                Photos = null;
+            }
         }
 
         /// <summary>
@@ -75,12 +82,14 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                     var total = photo.Total + voteChoice;
                     var average = (decimal)total / nvote;
                     _data.AddVote(
-                        new Vote {
+                        new Vote
+                        {
                             PhotoId = id,
                             UserId = _userManager.GetUserId(User),
                             Rating = voteChoice
-                        }, 
-                        new Photo {
+                        },
+                        new Photo
+                        {
                             Id = id,
                             Votes = nvote,
                             Average = average,

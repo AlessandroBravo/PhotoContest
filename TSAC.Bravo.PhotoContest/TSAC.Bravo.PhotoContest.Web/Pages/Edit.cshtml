@@ -5,10 +5,20 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<div class="text-center">
+    <h1 class="display-4">Edit Photo</h1>
+</div>
+<br />
 <div class="row">
     <div class="col-md-4">
+        @if (Model.photo.ThumbnailUrl != null)
+        {
             <img src="@Model.photo.ThumbnailUrl" height="300" width="400" />
+        }
+        else
+        {
+            <img src="@Model.photo.Url" height="300" width="400" />
+        }
     </div>
     <div class="col-md-6 offset-2">
         <form method="post">
@@ -25,14 +35,14 @@
                 <span asp-validation-for="photo.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-default" />
+                <input type="submit" value="Save" class="btn btn-success" />
             </div>
         </form>
     </div>
 </div>
 <br />
 <div>
-    <a asp-page="./Index">Back to List</a>
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
 </div>
 
 @section Scripts {

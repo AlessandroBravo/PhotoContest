@@ -24,7 +24,14 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
 
         public void OnGet(int id)
         {
-            Photo = _data.GetPhoto(id);
+            try
+            {
+                Photo = _data.GetPhoto(id);
+            }
+            catch (Exception)
+            {
+                Photo = null;
+            }
         }
 
         public bool IsOwner()
