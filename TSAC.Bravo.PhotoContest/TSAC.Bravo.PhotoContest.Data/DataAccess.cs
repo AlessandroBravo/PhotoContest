@@ -30,11 +30,11 @@ namespace TSAC.Bravo.PhotoContest.Data
         }
 
         /// <summary>
-        /// Get all the informations about a photo
+        /// get all the informations about a photo
         /// </summary>
-        /// <param name="Id"></param>
-        /// <returns></returns>
-        public Photo GetPhoto(int Id)
+        /// <param name="photoId"></param>
+        /// <returns>a single photo based on the id</returns>
+        public Photo GetPhoto(int photoId)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
@@ -51,7 +51,7 @@ namespace TSAC.Bravo.PhotoContest.Data
                                 FROM ""AspNetUsers"" aspU
                                        join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
                             WHERE t18bp.id = @id";
-                return connection.QueryFirstOrDefault<Photo>(query, new { id = Id });
+                return connection.QueryFirstOrDefault<Photo>(query, new { id = photoId });
             }
         }
 
@@ -90,13 +90,13 @@ namespace TSAC.Bravo.PhotoContest.Data
             }
         }
 
-        /// <summary>
+        /// <summary> 
         /// return the informations about a vote if the user voted that photo
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="photoId"></param>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public Vote GetPhotoUser(int id, string userId)
+        public Vote GetPhotoUser(int photoId, string userId)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
@@ -107,8 +107,8 @@ namespace TSAC.Bravo.PhotoContest.Data
                           from tsac18_bravo_vote_user t18bvu 
                                 left join tsac18_bravo_photo t18bp 
                                 on t18bvu.photo_id = t18bp.id
-                           where photo_id = @Id and user_id = @User";
-                return connection.QueryFirstOrDefault<Vote>(query, new { Id = id, User = userId });
+                           where photo_id = @id and user_id = @user";
+                return connection.QueryFirstOrDefault<Vote>(query, new { id = photoId, user = userId });
             }
         }
 
@@ -129,7 +129,8 @@ namespace TSAC.Bravo.PhotoContest.Data
                                     ,t18bp.thumbnailurl as ThumbnailUrl
                             FROM ""AspNetUsers"" aspU 
                                     join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
-                            ORDER BY Average desc, Votes desc";
+                            ORDER BY Average desc, Votes desc
+                            LIMIT 6";
                 return connection.Query<Photo>(query);
             }
         }
@@ -165,7 +166,7 @@ namespace TSAC.Bravo.PhotoContest.Data
         }
 
         /// <summary>
-        /// 
+        /// update the title and the description of a photo
         /// </summary>
         /// <param name="photo"></param>
         public void UpdatePhoto(Photo photo)

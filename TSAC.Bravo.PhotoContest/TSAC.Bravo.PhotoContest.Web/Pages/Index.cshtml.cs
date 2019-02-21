@@ -53,16 +53,28 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// <summary>
         /// Checks if an image has been voted from the user
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="photoId"></param>
         /// <returns></returns>
-        public bool Voted(int id)
+        public bool Voted(int photoId)
         {
-            Vote vote = _data.GetPhotoUser(id, _userManager.GetUserId(User));
+            Vote vote = _data.GetPhotoUser(photoId, _userManager.GetUserId(User));
             if (vote != null)
             {
                 return true;
             }
             return false;
+        }
+
+
+        /// <summary>
+        /// checks the owner of a photo
+        /// </summary>
+        /// <param name="photoId"></param>
+        /// <returns></returns>
+        public bool IsOwner(int photoId)
+        {
+            Photo photo = _data.GetPhoto(photoId);
+            return photo.UserId == _userManager.GetUserId(User);
         }
 
         /// <summary>

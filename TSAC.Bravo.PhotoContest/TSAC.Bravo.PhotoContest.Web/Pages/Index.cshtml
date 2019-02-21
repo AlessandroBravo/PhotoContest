@@ -39,7 +39,7 @@ else
                     <div class="card-body">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            @if (Model.Voted(item.Id))
+                            @if (Model.Voted(item.Id) || Model.IsOwner(item.Id))
                             {
                                 <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
                             }
