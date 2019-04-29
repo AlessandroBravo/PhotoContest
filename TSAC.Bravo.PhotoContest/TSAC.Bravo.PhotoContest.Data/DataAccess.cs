@@ -45,6 +45,7 @@ namespace TSAC.Bravo.PhotoContest.Data
                                      ,t18bp.average      as Average
                                      ,aspU.""UserName""    as UserName
                                      ,t18bp.thumbnailurl as ThumbnailUrl
+                                     ,t18bp.uploadtimestamp as UploadTimestamp
                                      ,t18bp.title as Title
                                      ,t18bp.description as Description
                                      ,aspU.""Id"" as UserId
@@ -84,8 +85,8 @@ namespace TSAC.Bravo.PhotoContest.Data
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
-                var query = @"INSERT INTO tsac18_bravo_photo(url, votes, total, average, upload_user_id, title, description) 
-                                                    VALUES (@Url, @Votes, @Total, @Average, @UserName, @Title, @Description);";
+                var query = @"INSERT INTO tsac18_bravo_photo(url, votes, total, average, upload_user_id, title, description, uploadtimestamp) 
+                                                    VALUES (@Url, @Votes, @Total, @Average, @UserName, @Title, @Description, @UploadTimestamp);";
                 connection.Execute(query, photo);
             }
         }
@@ -127,9 +128,11 @@ namespace TSAC.Bravo.PhotoContest.Data
                                     ,t18bp.average as Average
                                     ,aspU.""UserName"" as UserName 
                                     ,t18bp.thumbnailurl as ThumbnailUrl
+                                    ,t18bp.uploadtimestamp as UploadTimestamp
+                                    ,(100 * t18bp.average) + (10 * t18bp.votes) as Score
                             FROM ""AspNetUsers"" aspU 
                                     join tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
-                            ORDER BY Average desc, Votes desc
+                            ORDER BY Score desc, UploadTimestamp desc
                             LIMIT 6";
                 return connection.Query<Photo>(query);
             }
