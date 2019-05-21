@@ -18,7 +18,9 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\TSAC.Bravo.PhotoContest.Cache\TSAC.Bravo.PhotoContest.Cache.csproj" />
     <ProjectReference Include="..\TSAC.Bravo.PhotoContest.Data\TSAC.Bravo.PhotoContest.Data.csproj" />
+    <ProjectReference Include="..\TSAC.Bravo.PhotoContest.Queue\TSAC.Bravo.PhotoContest.Queue.csproj" />
     <ProjectReference Include="..\TSAC.Bravo.PhotoContest.Upload\TSAC.Bravo.PhotoContest.Upload.csproj" />
   </ItemGroup>
 
