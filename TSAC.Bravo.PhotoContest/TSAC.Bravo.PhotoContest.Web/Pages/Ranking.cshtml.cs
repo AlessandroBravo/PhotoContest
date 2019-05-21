@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using TSAC.Bravo.PhotoContest.Cache;
 using TSAC.Bravo.PhotoContest.Data;
 using TSAC.Bravo.PhotoContest.Data.Models;
 
@@ -14,6 +12,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
     {
         private readonly IDataAccess _data;
         public UserManager<IdentityUser> _userManager;
+        private readonly ICacheAccess _cacheAccess;
         public IEnumerable<Photo> Photos { get; set; }
        
         /// <summary>
@@ -21,10 +20,11 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// </summary>
         /// <param name="data"></param>
         /// <param name="userManager"></param>
-        public RankingModel(IDataAccess data, UserManager<IdentityUser> userManager)
+        public RankingModel(IDataAccess data, UserManager<IdentityUser> userManager, ICacheAccess cacheAccess)
         {
             _data = data;
             _userManager = userManager;
+            _cacheAccess = cacheAccess;
         }
 
         /// <summary>
@@ -34,7 +34,14 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         {
             try
             {
-                Photos = _data.GetRanking();
+                try
+                {
+                    Photos = _cacheAccess.GetRank();
+                }
+                catch (Exception)
+                {
+                    Photos = _data.GetRanking();
+                }
             }
             catch (Exception)
             {
