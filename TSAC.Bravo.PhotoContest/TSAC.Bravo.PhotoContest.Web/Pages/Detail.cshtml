@@ -25,6 +25,8 @@ else
 
     <h2>@Model.Photo.Title</h2>
 
+    <p>Uploaded: @Model.Photo.UploadTimestamp.ToShortDateString()</p>
+
     <p>@Model.Photo.Description</p>
 
     <img src="@Model.Photo.Url" class="img-fluid mx-auto d-block" />

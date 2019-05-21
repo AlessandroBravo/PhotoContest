@@ -46,7 +46,7 @@ else
                             else
                             {
                                 <form method="post" class="form-inline" asp-page-handler="Vote">
-                                    <input type="hidden" value="@item.Id" name="id" />
+                                    <input type="hidden" value="@item.Id" name="photoId" />
                                     <div class="form-group pr-md-2">
                                         <label class="col-form-label pr-md-2">Vote</label>
                                         <select name="voteChoice" class="form-control form-check-input">
@@ -58,7 +58,7 @@ else
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <input type="submit" value="Invia" class="btn btn-primary" />
+                                        <input type="submit" value="Send" class="btn btn-primary" />
                                     </div>
                                 </form>
                             }
