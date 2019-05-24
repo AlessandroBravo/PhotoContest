@@ -13,12 +13,12 @@
 @if (Model.Photos == null)
 {
     <p class="blockquote text-center">Not a great day for servers today. Will be back soon!!</p>
-    <img src="~/images/feeling_blue.svg" alt="Something went wrong" class="img-fluid mx-auto d-block" height="800px" width="700px" />
+    <img src="~/images/feeling_blue.svg" alt="Something went wrong" class="img-fluid mx-auto d-block" height="800" width="700" />
 }
 else if (Model.Photos.Count() == 0)
 {
     <p class="blockquote text-center">Be the first to use our Web Site, create a new account and start uploading photos!!</p>
-    <img src="~/images/blank_canvas.svg" alt="No Photos" class="img-fluid mx-auto d-block" height="800px" width="700px" />
+    <img src="~/images/blank_canvas.svg" alt="No Photos" class="img-fluid mx-auto d-block" height="800" width="700" />
 }
 else
 {
@@ -41,7 +41,7 @@ else
                         {
                             @if (Model.Voted(item.Id) || Model.IsOwner(item.Id))
                             {
-                                <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average</p>
+                                <p class="card-text"><span class="fas fa-user"></span> @item.Votes - <span class="fas fa-star" style="color:gold"></span> @item.Average.ToString("0.#")</p>
                             }
                             else
                             {
