@@ -12,6 +12,7 @@ using TSAC.Bravo.PhotoContest.Data;
 using Microsoft.AspNetCore.HttpOverrides;
 using TSAC.Bravo.PhotoContest.Upload;
 using TSAC.Bravo.PhotoContest.Cache;
+using TSAC.Bravo.PhotoContest.Queue;
 
 namespace TSAC.Bravo.PhotoContest.Web
 {
@@ -45,6 +46,7 @@ namespace TSAC.Bravo.PhotoContest.Web
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSingleton<IDataAccess, DataAccess>();
             services.AddSingleton<ICacheAccess, CacheAccess>();
+            services.AddSingleton<IQueueAccess, QueueAccess>();
             if (Configuration["ActiveService"].Equals("aws"))
             {
                 services.AddScoped<IUploadLibrary, UploadAWS>();
