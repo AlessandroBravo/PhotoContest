@@ -71,7 +71,8 @@ namespace TSAC.Bravo.PhotoContest.Data
                                       ,aspU.""UserName"" as UserName
                                       ,t18bp.thumbnailurl as ThumbnailUrl
                                 FROM ""AspNetUsers"" aspU
-                                JOIN tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id";
+                                JOIN tsac18_bravo_photo t18bp on aspU.""Id"" = t18bp.upload_user_id
+                                order by t18bp.uploadtimestamp desc";
                 return connection.Query<Photo>(query);
             }
         }
