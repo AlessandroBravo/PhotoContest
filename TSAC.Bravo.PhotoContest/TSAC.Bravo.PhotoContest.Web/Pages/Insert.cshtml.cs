@@ -27,7 +27,13 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         private readonly ICacheAccess _cacheAccess;
         private readonly IQueueAccess _queueAccess;
 
-        public InsertModel(IDataAccess data, UserManager<IdentityUser> userManager, IConfiguration config, IUploadLibrary uploadAws, IUploadLibrary uploadAzure, ICacheAccess cacheAccess, IQueueAccess queueAccess)
+        public InsertModel(IDataAccess data, 
+            UserManager<IdentityUser> userManager, 
+            IConfiguration config, 
+            IUploadLibrary uploadAws, 
+            IUploadLibrary uploadAzure, 
+            ICacheAccess cacheAccess, 
+            IQueueAccess queueAccess)
         {
             _data = data;
             _userManager = userManager;
@@ -87,7 +93,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                         };
 
                         _data.AddPhoto(photo);
-                        _cacheAccess.InsertPhoto(photo);
+                        //_cacheAccess.InsertPhoto(photo);
                         _queueAccess.SendToQueue(url);
                     }
 

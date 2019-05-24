@@ -36,7 +36,8 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             {
                 try
                 {
-                    Photos = _cacheAccess.GetRank();
+                    //Photos = _cacheAccess.GetRank();
+                    Photos = _data.GetRanking();
                 }
                 catch (Exception)
                 {

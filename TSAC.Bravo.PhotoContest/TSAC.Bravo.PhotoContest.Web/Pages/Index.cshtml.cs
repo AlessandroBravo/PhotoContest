@@ -37,7 +37,8 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             {
                 try
                 {
-                    Photos = _cacheAccess.GetPhotos();
+                    //Photos = _cacheAccess.GetPhotos();
+                    Photos = _data.GetPhotos();
                 }
                 catch (Exception)
                 {
@@ -86,7 +87,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         {
             try
             {
-                if (voteChoice != 0)
+                if (voteChoice >0 && voteChoice <5)
                 {
                     Photo photo = _data.GetPhoto(photoId);
                     var nvote = photo.Votes + 1;
@@ -108,7 +109,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                             UserName = _userManager.GetUserId(User)
                         }
                         );
-                    _cacheAccess.AddVote(photoId, voteChoice);
+                    //_cacheAccess.AddVote(photoId, voteChoice);
                 }
                 return RedirectToPage("/Index");
             }
