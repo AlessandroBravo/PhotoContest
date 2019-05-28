@@ -87,7 +87,7 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         {
             try
             {
-                if (voteChoice >0 && voteChoice <5)
+                if (voteChoice >0 && voteChoice <=5)
                 {
                     Photo photo = _data.GetPhoto(photoId);
                     var nvote = photo.Votes + 1;
