@@ -19,20 +19,20 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
     [Authorize]
     public class InsertModel : PageModel
     {
-        public readonly IDataAccess _data;
-        public UserManager<IdentityUser> _userManager;
+        private readonly IDataAccess _data;
+        private UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _config;
         private readonly IUploadLibrary _uploadAws;
         private readonly IUploadLibrary _uploadAzure;
         private readonly ICacheAccess _cacheAccess;
         private readonly IQueueAccess _queueAccess;
 
-        public InsertModel(IDataAccess data, 
-            UserManager<IdentityUser> userManager, 
-            IConfiguration config, 
-            IUploadLibrary uploadAws, 
-            IUploadLibrary uploadAzure, 
-            ICacheAccess cacheAccess, 
+        public InsertModel(IDataAccess data,
+            UserManager<IdentityUser> userManager,
+            IConfiguration config,
+            IUploadLibrary uploadAws,
+            IUploadLibrary uploadAzure,
+            ICacheAccess cacheAccess,
             IQueueAccess queueAccess)
         {
             _data = data;
@@ -70,32 +70,28 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// <returns></returns>
         public async Task<ActionResult> OnPost()
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && IsImage(Photo.Image))
             {
                 try
                 {
-                    if (IsImage(Photo.Image))
+                    string url = _uploadAws.GetCdn() + Photo.Image.FileName;
+
+                    await _uploadAws.Upload(Photo.Image.OpenReadStream(), Photo.Image.FileName);
+
+                    DateTime date = DateTime.Now;
+
+                    Photo photo = new Photo
                     {
-                        string url = _uploadAws.GetCdn() + Photo.Image.FileName;
+                        Url = url,
+                        UserName = _userManager.GetUserId(User),
+                        Description = Photo.Description,
+                        Title = Photo.Title,
+                        UploadTimestamp = date
+                    };
 
-                        await _uploadAws.Upload(Photo.Image.OpenReadStream(), Photo.Image.FileName);
-
-                        Photo photo = new Photo
-                        {
-                            Url = url,
-                            //Average = 0,
-                            //Votes = 0,
-                            //Total = 0,
-                            UserName = _userManager.GetUserId(User),
-                            Description = Photo.Description,
-                            Title = Photo.Title,
-                            UploadTimestamp = new DateTime()
-                        };
-
-                        _data.AddPhoto(photo);
-                        //_cacheAccess.InsertPhoto(photo);
-                        _queueAccess.SendToQueue(url);
-                    }
+                    _data.AddPhoto(photo);
+                    //_cacheAccess.InsertPhoto(photo);
+                    _queueAccess.SendToQueue(url);
 
                 }
                 catch (Exception ex)
