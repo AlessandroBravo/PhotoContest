@@ -1,26 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Amazon.S3;
-using Amazon.S3.Transfer;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Configuration;
-using RabbitMQ.Client;
+using TSAC.Bravo.PhotoContest.Cache;
 using TSAC.Bravo.PhotoContest.Data;
 using TSAC.Bravo.PhotoContest.Data.Models;
-using TSAC.Bravo.PhotoContest.Upload;
 
 namespace TSAC.Bravo.PhotoContest.Web.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly IDataAccess _data;
+        public readonly IDataAccess _data;
+        public readonly ICacheAccess _cacheAccess;
         public UserManager<IdentityUser> _userManager;
         public IEnumerable<Photo> Photos { get; set; }
 
@@ -29,10 +21,11 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         /// </summary>
         /// <param name="data"></param>
         /// <param name="userManager"></param>
-        public IndexModel(IDataAccess data, UserManager<IdentityUser> userManager)
+        public IndexModel(IDataAccess data, UserManager<IdentityUser> userManager, ICacheAccess cacheAccess)
         {
             _data = data;
             _userManager = userManager;
+            _cacheAccess = cacheAccess;
         }
 
         /// <summary>
@@ -42,7 +35,15 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         {
             try
             {
-                Photos = _data.GetPhotos();
+                try
+                {
+                    //Photos = _cacheAccess.GetPhotos();
+                    Photos = _data.GetPhotos();
+                }
+                catch (Exception)
+                {
+                    Photos = _data.GetPhotos();
+                }
             }
             catch (Exception)
             {
@@ -51,13 +52,13 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         }
 
         /// <summary>
-        /// Checks if an image has been voted from the user
+        /// Check if an image has been voted from the user
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="photoId"></param>
         /// <returns></returns>
-        public bool Voted(int id)
+        public bool Voted(int photoId)
         {
-            Vote vote = _data.GetPhotoUser(id, _userManager.GetUserId(User));
+            Vote vote = _data.GetPhotoUser(photoId, _userManager.GetUserId(User));
             if (vote != null)
             {
                 return true;
@@ -66,37 +67,49 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
         }
 
         /// <summary>
+        /// Check the owner of a photo
+        /// </summary>
+        /// <param name="photoId"></param>
+        /// <returns></returns>
+        public bool IsOwner(int photoId)
+        {
+            Photo photo = _data.GetPhoto(photoId);
+            return photo.UserId == _userManager.GetUserId(User);
+        }
+
+        /// <summary>
         /// Update the database with the vote of the user
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="photoId"></param>
         /// <param name="voteChoice"></param>
         /// <returns></returns>
-        public IActionResult OnPostVote(int id, int voteChoice)
+        public IActionResult OnPostVote(int photoId, int voteChoice)
         {
             try
             {
-                if (voteChoice != 0)
+                if (voteChoice >0 && voteChoice <=5)
                 {
-                    Photo photo = _data.GetPhoto(id);
+                    Photo photo = _data.GetPhoto(photoId);
                     var nvote = photo.Votes + 1;
                     var total = photo.Total + voteChoice;
                     var average = (decimal)total / nvote;
                     _data.AddVote(
                         new Vote
                         {
-                            PhotoId = id,
+                            PhotoId = photoId,
                             UserId = _userManager.GetUserId(User),
                             Rating = voteChoice
                         },
                         new Photo
                         {
-                            Id = id,
+                            Id = photoId,
                             Votes = nvote,
                             Average = average,
                             Total = total,
                             UserName = _userManager.GetUserId(User)
                         }
                         );
+                    //_cacheAccess.AddVote(photoId, voteChoice);
                 }
                 return RedirectToPage("/Index");
             }

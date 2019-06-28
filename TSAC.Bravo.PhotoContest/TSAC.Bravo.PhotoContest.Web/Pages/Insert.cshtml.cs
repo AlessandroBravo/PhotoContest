@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -11,9 +8,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
-using RabbitMQ.Client;
+using TSAC.Bravo.PhotoContest.Cache;
 using TSAC.Bravo.PhotoContest.Data;
 using TSAC.Bravo.PhotoContest.Data.Models;
+using TSAC.Bravo.PhotoContest.Queue;
 using TSAC.Bravo.PhotoContest.Upload;
 
 namespace TSAC.Bravo.PhotoContest.Web.Pages
@@ -22,21 +20,33 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
     public class InsertModel : PageModel
     {
         private readonly IDataAccess _data;
-        public UserManager<IdentityUser> _userManager;
+        private UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _config;
         private readonly IUploadLibrary _uploadAws;
         private readonly IUploadLibrary _uploadAzure;
-        public InsertModel(IDataAccess data, UserManager<IdentityUser> userManager, IConfiguration config, IUploadLibrary uploadAws, IUploadLibrary uploadAzure)
+        private readonly ICacheAccess _cacheAccess;
+        private readonly IQueueAccess _queueAccess;
+
+        public InsertModel(IDataAccess data,
+            UserManager<IdentityUser> userManager,
+            IConfiguration config,
+            IUploadLibrary uploadAws,
+            IUploadLibrary uploadAzure,
+            ICacheAccess cacheAccess,
+            IQueueAccess queueAccess)
         {
             _data = data;
             _userManager = userManager;
             _config = config;
             _uploadAws = uploadAws;
             _uploadAzure = uploadAzure;
+            _cacheAccess = cacheAccess;
+            _queueAccess = queueAccess;
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            return Page();
         }
 
         [BindProperty]
@@ -54,32 +64,34 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
             public IFormFile Image { get; set; }
         };
 
-
+        /// <summary>
+        /// form action to upload a photo
+        /// </summary>
+        /// <returns></returns>
         public async Task<ActionResult> OnPost()
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && IsImage(Photo.Image))
             {
                 try
                 {
-                    if (IsImage(Photo.Image))
+                    string url = _uploadAws.GetCdn() + Photo.Image.FileName;
+
+                    await _uploadAws.Upload(Photo.Image.OpenReadStream(), Photo.Image.FileName);
+
+                    DateTime date = DateTime.Now;
+
+                    Photo photo = new Photo
                     {
-                        string url = _uploadAws.GetCdn() + Photo.Image.FileName;
+                        Url = url,
+                        UserName = _userManager.GetUserId(User),
+                        Description = Photo.Description,
+                        Title = Photo.Title,
+                        UploadTimestamp = date
+                    };
 
-                        await _uploadAws.Upload(Photo.Image.OpenReadStream(), Photo.Image.FileName);
-
-                        _data.AddPhoto(new Photo
-                        {
-                            Url = url,
-                            Average = 0,
-                            Votes = 0,
-                            Total = 0,
-                            UserName = _userManager.GetUserId(User),
-                            Title = Photo.Title,
-                            Description = Photo.Description
-                        });
-
-                        SendToQueue(url);
-                    }
+                    _data.AddPhoto(photo);
+                    //_cacheAccess.InsertPhoto(photo);
+                    _queueAccess.SendToQueue(url);
 
                 }
                 catch (Exception ex)
@@ -89,38 +101,6 @@ namespace TSAC.Bravo.PhotoContest.Web.Pages
                 return RedirectToPage("./Index");
             }
             return Page();
-        }
-
-        public void SendToQueue(string message)
-        {
-            try
-            {
-                var factory = new ConnectionFactory() { HostName = _config["RabbitMQ:HostName"], UserName = _config["RabbitMQ:UserName"], Password = _config["RabbitMQ:Password"] };
-                using (var connection = factory.CreateConnection())
-                using (var channel = connection.CreateModel())
-                {
-                    channel.QueueDeclare(queue: "task_queue",
-                                         durable: true,
-                                         exclusive: false,
-                                         autoDelete: false,
-                                         arguments: null);
-
-
-                    var body = Encoding.UTF8.GetBytes(message);
-
-                    var properties = channel.CreateBasicProperties();
-                    properties.Persistent = true;
-
-                    channel.BasicPublish(exchange: "",
-                                         routingKey: "task_queue",
-                                         basicProperties: properties,
-                                         body: body);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("rabbitmq error"+ e);
-            }
         }
 
         /// <summary>
